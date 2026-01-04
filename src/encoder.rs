@@ -22,7 +22,20 @@ pub enum EncodeError {
 /// Encode a JSON string to a WeakAura import string
 pub fn encode(json: &str) -> Result<String, EncodeError> {
     // Parse JSON
-    let value: Value = serde_json::from_str(json)?;
+    let mut value: Value = serde_json::from_str(json)?;
+
+    // Auto-add required WeakAura metadata fields if missing
+    if let Value::Object(ref mut obj) = value {
+        if !obj.contains_key("m") {
+            obj.insert("m".to_string(), Value::String("d".to_string()));
+        }
+        if !obj.contains_key("s") {
+            obj.insert("s".to_string(), Value::String("5.20.7".to_string()));
+        }
+        if !obj.contains_key("v") {
+            obj.insert("v".to_string(), Value::Number(2000.into()));
+        }
+    }
 
     // Convert to LuaValue
     let lua_value = LuaValue::from_json(&value);
